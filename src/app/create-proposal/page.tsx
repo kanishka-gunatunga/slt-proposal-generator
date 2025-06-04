@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import Image from 'next/image';
+import html2pdf from 'html2pdf.js';
+
 
 const Page = () => {
     const [showModal, setShowModal] = useState(false);
@@ -10,8 +12,45 @@ const Page = () => {
     const [loading, setLoading] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const [parsedData, setParsedData] = useState<any>(null);
     const [pdfUrl, setPdfUrl] = useState<string | null>("/template/business-proposal.pdf");
+    const [parsedData, setParsedData] = useState<any>(null);
+    const [originalData, setOriginalData] = useState(null);
+    const [formData, setFormData] = useState({
+        referenceNumber: '',
+        customerName: '',
+        designation: '',
+        companyName: '',
+        requirements: '',
+        Address: '',
+        location: '',
+        ProjectScope: '',
+        selectedTemplate: '',
+        uploadedImage: '',
+        uploadedImageFile: null,
+    });
+    const [solutionBOQs, setSolutionBOQs] = useState<any[]>([]);
+    const [optionalItems, setOptionalItems] = useState<any[]>([]);
+    const [termsAndConditions, setTermsAndConditions] = useState<string[]>([]);
+
+
+
+    useEffect(() => {
+        if (parsedData) {
+            setSolutionBOQs(parsedData.solutionBOQs || []);
+            setOptionalItems(parsedData.optionalItems || []);
+            setTermsAndConditions(parsedData.termsAndConditions || '');
+        }
+    }, [parsedData]);
+
+
+
+
+
+    // useEffect(() => {
+    //     if (parsedData) {
+    //         setFormData(parsedData);
+    //     }
+    // }, [parsedData]);
 
 
     const handleDrop = (e: React.DragEvent) => {
@@ -33,6 +72,24 @@ const Page = () => {
 
     const handleRemoveFile = (index: number) => {
         setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const handleSolutionChange = (docIndex, itemIndex, field, value) => {
+        const updated = [...solutionBOQs];
+        updated[docIndex].items[itemIndex][field] = value;
+        setSolutionBOQs(updated);
+    };
+
+    const handleOptionalChange = (index, field, value) => {
+        const updated = [...optionalItems];
+        updated[index][field] = value;
+        setOptionalItems(updated);
+    };
+
+    const handleTermChange = (index, value) => {
+        const updated = [...termsAndConditions];
+        updated[index] = value;
+        setTermsAndConditions(updated);
     };
 
     const handleProcess = async () => {
@@ -64,6 +121,11 @@ const Page = () => {
 
             setPdfUrl('/template/business-proposal.pdf');
             setParsedData(parsed);
+            setSolutionBOQs(parsed.solutionBOQs || []);
+            setOptionalItems(parsed.optionalItems || []);
+            setTermsAndConditions(parsed.termsAndConditions)
+            setOriginalData(parsed);
+            setFormData(parsed);
             setShowModal(false);
             setShowCompleteModal(true);
         } catch (error) {
@@ -74,6 +136,24 @@ const Page = () => {
         }
     };
 
+    const handleDownloadPDF = async () => {
+        if (typeof window === 'undefined') return;
+
+        const html2pdf = (await import('html2pdf.js')).default;
+        const element = document.getElementById('proposal-content');
+        if (element) {
+            html2pdf()
+                .set({
+                    margin: 10,
+                    filename: 'business-proposal.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                })
+                .from(element)
+                .save();
+        }
+    };
 
     return (
         <Layout>
@@ -196,51 +276,164 @@ const Page = () => {
             </div>
             {parsedData && pdfUrl && (
                 <div className="row">
-                    <div className="col-md-12">
+
+                    <div className="col-md-6">
+                        <button className="btn btn-success" onClick={() => {
+                            const updatedData = {
+                                ...formData,
+                                solutionBOQs: solutionBOQs || [],
+                                optionalItems: optionalItems || [],
+                                termsAndConditions: termsAndConditions || ''
+                            };
+                            console.log("Saving data:", updatedData);
+                        }}>
+                            Save
+                        </button>
+
+
+
+
                         <div className="mb-3">
                             <label className="form-label">Reference Number</label>
-                            <input type="text" className="form-control" value={parsedData.referenceNumber || ''} readOnly />
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.referenceNumber || ''}
+                                onChange={(e) => {
+                                    const updated = { ...formData, referenceNumber: e.target.value };
+                                    setFormData(updated);
+                                    setParsedData({ ...parsedData, ...updated });
+                                }}
+                            />
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label">Customer Name</label>
-                            <input type="text" className="form-control" value={parsedData.customerName || ''} readOnly />
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.customerName || ''}
+                                onChange={(e) => {
+                                    const updated = { ...formData, customerName: e.target.value };
+                                    setFormData(updated);
+                                    setParsedData({ ...parsedData, ...updated });
+                                }}
+                            />
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label">Designation</label>
-                            <input type="text" className="form-control" value={parsedData.designation || ''} readOnly />
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.designation || ''}
+                                onChange={(e) => {
+                                    const updated = { ...formData, designation: e.target.value };
+                                    setFormData(updated);
+                                    setParsedData({ ...parsedData, ...updated });
+                                }}
+                            />
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label">Company Name</label>
-                            <input type="text" className="form-control" value={parsedData.companyName || ''} readOnly />
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.companyName || ''}
+                                onChange={(e) => {
+                                    const updated = { ...formData, companyName: e.target.value };
+                                    setFormData(updated);
+                                    setParsedData({ ...parsedData, ...updated });
+                                }}
+                            />
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label">Requirements</label>
-                            <textarea className="form-control" rows={4} value={parsedData.requirements || ''} readOnly />
+                            <textarea
+                                className="form-control"
+                                rows={4}
+                                value={formData.requirements || ''}
+                                onChange={(e) => {
+                                    const updated = { ...formData, requirements: e.target.value };
+                                    setFormData(updated);
+                                    setParsedData({ ...parsedData, ...updated });
+                                }}
+                            />
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label">Address</label>
-                            <input type="text" className="form-control" value={parsedData.Address || ''} readOnly />
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.Address || ''}
+                                onChange={(e) => {
+                                    const updated = { ...formData, Address: e.target.value };
+                                    setFormData(updated);
+                                    setParsedData({ ...parsedData, ...updated });
+                                }}
+                            />
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label">Location</label>
-                            <input type="text" className="form-control" value={parsedData.location || ''} readOnly />
+                            <input
+                                type="text"
+                                className="form-control"
+                                value={formData.location || ''}
+                                onChange={(e) => {
+                                    const updated = { ...formData, location: e.target.value };
+                                    setFormData(updated);
+                                    setParsedData({ ...parsedData, ...updated });
+                                }}
+                            />
+                        </div>
+                        <div className="mb-3">
+                            <label className="form-label">Select Template</label>
+                            <select
+                                className="form-select"
+                                value={formData.selectedTemplate || ''}
+                                onChange={(e) => setFormData({ ...formData, selectedTemplate: e.target.value })}
+                            >
+                                <option value="">Choose a Template</option>
+                                <option value="Template A">Template A</option>
+                                <option value="Template B">Template B</option>
+                                <option value="Template C">Template C</option>
+                            </select>
+                        </div>
+
+                        <div className="mb-3">
+                            <label className="form-label">Upload Image</label>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="form-control"
+                                onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                        const imageUrl = URL.createObjectURL(file);
+                                        setFormData({ ...formData, uploadedImage: imageUrl, uploadedImageFile: file });
+                                    }
+                                }}
+                            />
                         </div>
 
                         <div className="mb-3">
                             <label className="form-label">Project Scope</label>
                             <textarea
                                 className="form-control"
-                                rows={6}
-                                value={parsedData.ProjectScope?.join('\n\n') || ''}
-                                readOnly
+                                rows={4}
+                                value={formData.ProjectScope || ''}
+                                onChange={(e) => {
+                                    const updated = { ...formData, ProjectScope: e.target.value };
+                                    setFormData(updated);
+                                    setParsedData({ ...parsedData, ...updated });
+                                }}
                             />
                         </div>
+
                         <div className="mb-4">
                             <label className="form-label">Solution BOQs</label>
                             <div className="table-responsive">
@@ -258,20 +451,23 @@ const Page = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {parsedData.solutionBOQs?.map((doc, docIndex) =>
-                                            doc.items.map((item, itemIndex) => (
-                                                <tr key={`${docIndex}-${itemIndex}`}>
-                                                    <td>{item.Item}</td>
-                                                    <td>{item.Qty || '-'}</td>
-                                                    <td>{item["Unit Price"] || '-'}</td>
-                                                    <td>{item["Total Cost (Rs.)"] || '-'}</td>
-                                                    <td>{item["Total Tax (Rs.): NBT"] || '-'}</td>
-                                                    <td>{item["Total cost Social Security Contribution Levy (Rs.)"] || '-'}</td>
-                                                    <td>{item["Total Tax (Rs.): 18%VAT"] || '-'}</td>
-                                                    <td>{item["Total Cost with Taxes (Rs.)"] || '-'}</td>
-                                                </tr>
-                                            ))
-                                        )}
+                                        <tbody>
+                                            {solutionBOQs?.flatMap((doc, i) =>
+                                                doc.items?.map((item, index) => (
+                                                    <tr key={`${i}-${index}`}>
+                                                        <td><input value={item.Item} onChange={e => handleSolutionChange(i, index, 'Item', e.target.value)} /></td>
+                                                        <td><input value={item.Qty ?? ''} onChange={e => handleSolutionChange(i, index, 'Qty', e.target.value)} /></td>
+                                                        <td><input value={item["Unit Price"]} onChange={e => handleSolutionChange(i, index, 'Unit Price', e.target.value)} /></td>
+                                                        <td><input value={item["Total Cost (Rs.)"]} onChange={e => handleSolutionChange(i, index, 'Total Cost (Rs.)', e.target.value)} /></td>
+                                                        <td><input value={item["Total Tax (Rs.): NBT"] ?? ''} onChange={e => handleSolutionChange(i, index, 'Total Tax (Rs.): NBT', e.target.value)} /></td>
+                                                        <td><input value={item["Total cost Social Security Contribution Levy (Rs.)"] ?? ''} onChange={e => handleSolutionChange(i, index, 'Total cost Social Security Contribution Levy (Rs.)', e.target.value)} /></td>
+                                                        <td><input value={item["Total Tax (Rs.): 18%VAT"] ?? ''} onChange={e => handleSolutionChange(i, index, 'Total Tax (Rs.): 18%VAT', e.target.value)} /></td>
+                                                        <td><input value={item["Total Cost with Taxes (Rs.)"]} onChange={e => handleSolutionChange(i, index, 'Total Cost with Taxes (Rs.)', e.target.value)} /></td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+
                                     </tbody>
                                 </table>
                             </div>
@@ -297,21 +493,22 @@ const Page = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {parsedData.optionalItems?.flatMap((section: any) =>
-                                            section.items?.map((item: any, itemIndex: number) => (
-                                                <tr key={`${section.source}-${itemIndex}`}>
-                                                    <td>{item["Item"] ?? '-'}</td>
-                                                    <td>{item["Qty"] ?? '-'}</td>
-                                                    <td>{item["Unit Price"] ?? '-'}</td>
-                                                    <td>{item["Total Cost (Rs.)"] ?? '-'}</td>
-                                                    <td>{item["Total Tax (Rs.): NBT"] ?? '-'}</td>
-                                                    <td>{item["Total Tax (Rs.): VAT"] ?? '-'}</td>
-                                                    <td>{item["Total Tax (Rs.): 18%VAT"] ?? '-'}</td>
-                                                    <td>{item["Total Cost with Taxes (Rs.)"] ?? '-'}</td>
-                                                    <td>{section.source}</td>
+                                        <tbody>
+                                            {optionalItems?.map((item, index) => (
+                                                <tr key={index}>
+                                                    <td><input value={item.Item} onChange={e => handleOptionalChange(index, 'Item', e.target.value)} /></td>
+                                                    <td><input value={item.Qty} onChange={e => handleOptionalChange(index, 'Qty', e.target.value)} /></td>
+                                                    <td><input value={item["Unit Price"] ?? ''} onChange={e => handleOptionalChange(index, 'Unit Price', e.target.value)} /></td>
+                                                    <td><input value={item["Total Cost (Rs.)"]} onChange={e => handleOptionalChange(index, 'Total Cost (Rs.)', e.target.value)} /></td>
+                                                    <td><input value={item["Total Tax (Rs.): NBT"]} onChange={e => handleOptionalChange(index, 'Total Tax (Rs.): NBT', e.target.value)} /></td>
+                                                    <td><input value={item["Total Tax (Rs.): SSCL"] ?? ''} onChange={e => handleOptionalChange(index, 'Total Tax (Rs.): SSCL', e.target.value)} /></td>
+                                                    <td><input value={item["Total Tax (Rs.): VAT"]} onChange={e => handleOptionalChange(index, 'Total Tax (Rs.): VAT', e.target.value)} /></td>
+                                                    <td><input value={item["Total Cost with Taxes (Rs.)"]} onChange={e => handleOptionalChange(index, 'Total Cost with Taxes (Rs.)', e.target.value)} /></td>
+                                                    <td><input value={item.source ?? ''} onChange={e => handleOptionalChange(index, 'source', e.target.value)} /></td>
                                                 </tr>
-                                            ))
-                                        )}
+                                            ))}
+                                        </tbody>
+
 
                                     </tbody>
                                 </table>
@@ -321,29 +518,126 @@ const Page = () => {
 
                         <div className="mb-3">
                             <label className="form-label">Terms and Conditions</label>
-                            <textarea
-                                className="form-control"
-                                rows={6}
-                                value={parsedData.termsAndConditions?.join('\n\n') || ''}
-                                readOnly
-                            />
+                            <ul>
+                                {termsAndConditions?.map((term, index) => (
+                                    <li key={index}>
+                                        <input
+                                            value={term}
+                                            onChange={(e) => handleTermChange(index, e.target.value)}
+                                            style={{ width: '100%' }}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+
                         </div>
                     </div>
 
-                    {/* <div className="col-md-6">
-                        {pdfUrl && (
-                            <iframe
-                                src={pdfUrl}
-                                width="100%"
-                                height="600px"
-                                style={{ border: '1px solid #ccc', borderRadius: '8px' }}
-                            />
+                    <div className="col-md-6">
+                        {parsedData && (
+                            <>
+                                <div id="proposal-content" style={{ padding: '30px', fontFamily: 'Arial' }}>
+                                    <h2 style={{ textAlign: 'center', marginBottom: '30px' }}>Business Proposal</h2>
+
+                                    <p><strong>Reference Number:</strong> {formData.referenceNumber || ''}</p>
+                                    <p><strong>Customer Name:</strong> {formData.customerName}</p>
+                                    <p><strong>Designation:</strong> {formData.designation ?? 'N/A'}</p>
+                                    <p><strong>Company Name:</strong> {formData.companyName ?? 'N/A'}</p>
+                                    <p><strong>Address:</strong> {formData.Address ?? 'N/A'}</p>
+                                    <p><strong>Location:</strong> {formData.location}</p>
+
+                                    <h4>Requirements</h4>
+                                    <p>{formData.requirements ?? 'Not specified'}</p>
+
+                                    <h4>Project Scope</h4>
+                                    <ul>
+                                        {(Array.isArray(parsedData.ProjectScope) ? parsedData.ProjectScope : [parsedData.ProjectScope])?.map((point, index) => (
+                                            <li key={index}>{point}</li>
+                                        ))}
+                                    </ul>
+                                    {formData.uploadedImage && (
+                                        <div className="mb-3">
+                                            <label className="form-label">Image Preview</label>
+                                            <Image
+                                                src={formData.uploadedImage}
+                                                alt="Uploaded"
+                                                className="img-thumbnail"
+                                                width={300}
+                                                height={300}
+                                                style={{ maxWidth: '100%', maxHeight: '300px' }}
+                                            />
+                                        </div>
+                                    )}
+                                    <h4>Solution BOQs</h4>
+                                    <table border={1} cellPadding={6} cellSpacing={0} width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th>
+                                                <th>NBT</th><th>SSCL</th><th>VAT</th><th>Total with Taxes</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {parsedData.solutionBOQs?.flatMap((doc, i) =>
+                                                doc.items?.map((item, index) => (
+                                                    <tr key={`${i}-${index}`}>
+                                                        <td>{item.Item}</td>
+                                                        <td>{item.Qty ?? 'N/A'}</td>
+                                                        <td>{item["Unit Price"]}</td>
+                                                        <td>{item["Total Cost (Rs.)"]}</td>
+                                                        <td>{item["Total Tax (Rs.): NBT"] ?? 'N/A'}</td>
+                                                        <td>{item["Total cost Social Security Contribution Levy (Rs.)"] ?? 'N/A'}</td>
+                                                        <td>{item["Total Tax (Rs.): 18%VAT"] ?? 'N/A'}</td>
+                                                        <td>{item["Total Cost with Taxes (Rs.)"]}</td>
+                                                    </tr>
+                                                )) ?? []
+                                            )}
+                                        </tbody>
+                                    </table>
+
+                                    <h4>Optional Items</h4>
+                                    <table border={1} cellPadding={6} cellSpacing={0} width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th>
+                                                <th>NBT</th><th>SSCL</th><th>VAT</th><th>Total with Taxes</th><th>Source</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {parsedData.optionalItems?.map((item, index) => (
+                                                <tr key={index}>
+                                                    <td>{item.Item}</td>
+                                                    <td>{item.Qty}</td>
+                                                    <td>{item["Unit Price"] ?? 'N/A'}</td>
+                                                    <td>{item["Total Cost (Rs.)"]}</td>
+                                                    <td>{item["Total Tax (Rs.): NBT"]}</td>
+                                                    <td>{item["Total Tax (Rs.): SSCL"] ?? 'N/A'}</td>
+                                                    <td>{item["Total Tax (Rs.): VAT"]}</td>
+                                                    <td>{item["Total Cost with Taxes (Rs.)"]}</td>
+                                                    <td>{item.source ?? 'N/A'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+
+                                    <h4>Terms and Conditions</h4>
+                                    <ul>
+                                        {termsAndConditions?.map((term: string, index: number) => (
+                                            <li key={index}>{term}</li>
+                                        )) ?? <li>No terms specified.</li>}
+                                    </ul>
+
+                                </div>
+                                <div style={{ marginTop: '20px' }}>
+                                    <button className="btn btn-primary" onClick={handleDownloadPDF}>
+                                        Download Proposal as PDF
+                                    </button>
+                                </div>
+                            </>
                         )}
-                    </div> */}
+                    </div>
                 </div>
 
             )}
-
         </Layout>
     );
 };
