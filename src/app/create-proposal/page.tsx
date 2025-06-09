@@ -175,24 +175,44 @@ const Page = () => {
         }
     };
 
-    const handleDownloadPDF = async () => {
-        if (typeof window === 'undefined') return;
+    // const handleDownloadPDF = async () => {
+    //     if (typeof window === 'undefined') return;
 
-        const html2pdf = (await import('html2pdf.js')).default;
-        const element = document.getElementById('proposal-content');
-        if (element) {
-            html2pdf()
-                .set({
-                    margin: 10,
-                    filename: 'business-proposal.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2 },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                })
-                .from(element)
-                .save();
-        }
-    };
+    //     const html2pdf = (await import('html2pdf.js')).default;
+    //     const element = document.getElementById('proposal-content');
+    //     if (element) {
+    //         html2pdf()
+    //             .set({
+    //                 margin: 10,
+    //                 filename: 'business-proposal.pdf',
+    //                 image: { type: 'jpeg', quality: 0.98 },
+    //                 html2canvas: { scale: 2 },
+    //                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    //             })
+    //             .from(element)
+    //             .save();
+    //     }
+    // };
+    const handleDownloadPDF = async () => {
+  if (typeof window === 'undefined') return;
+
+  const html2pdf = (await import('html2pdf.js')).default as any;
+
+  const element = document.getElementById('proposal-content');
+  if (element) {
+    html2pdf()
+      .set({
+        margin: 10,
+        filename: 'business-proposal.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      })
+      .from(element)
+      .save();
+  }
+};
+
 
     return (
         <Layout>
