@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -15,7 +17,32 @@ const Page = () => {
     const [pdfUrl, setPdfUrl] = useState<string | null>("/template/business-proposal.pdf");
     const [parsedData, setParsedData] = useState<any>(null);
     const [originalData, setOriginalData] = useState(null);
-    const [formData, setFormData] = useState({
+    // const [formData, setFormData] = useState({
+    //     referenceNumber: '',
+    //     customerName: '',
+    //     designation: '',
+    //     companyName: '',
+    //     requirements: '',
+    //     Address: '',
+    //     location: '',
+    //     ProjectScope: '',
+    //     selectedTemplate: '',
+    //     uploadedImage: '',
+    //     uploadedImageFile: null,
+    // });
+    const [formData, setFormData] = useState<{
+        referenceNumber: string;
+        customerName: string;
+        designation: string;
+        companyName: string;
+        requirements: string;
+        Address: string;
+        location: string;
+        ProjectScope: string;
+        selectedTemplate: string;
+        uploadedImage: string;
+        uploadedImageFile: File | null;
+    }>({
         referenceNumber: '',
         customerName: '',
         designation: '',
@@ -28,6 +55,7 @@ const Page = () => {
         uploadedImage: '',
         uploadedImageFile: null,
     });
+
     const [solutionBOQs, setSolutionBOQs] = useState<any[]>([]);
     const [optionalItems, setOptionalItems] = useState<any[]>([]);
     const [termsAndConditions, setTermsAndConditions] = useState<string[]>([]);
@@ -74,19 +102,30 @@ const Page = () => {
         setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
     };
 
-    const handleSolutionChange = (docIndex, itemIndex, field, value) => {
+    const handleSolutionChange = (docIndex: number, itemIndex: string | number, field: string, value: string) => {
         const updated = [...solutionBOQs];
         updated[docIndex].items[itemIndex][field] = value;
         setSolutionBOQs(updated);
     };
+    //     const handleSolutionChange = (
+    //     docIndex: number,
+    //     itemIndex: number,
+    //     field: string,
+    //     value: any
+    // ) => {
+    //     const updated = [...solutionBOQs];
+    //     updated[docIndex].items[itemIndex][field] = value;
+    //     setSolutionBOQs(updated);
+    // };
 
-    const handleOptionalChange = (index, field, value) => {
+
+    const handleOptionalChange = (index: number, field: string, value: string) => {
         const updated = [...optionalItems];
         updated[index][field] = value;
         setOptionalItems(updated);
     };
 
-    const handleTermChange = (index, value) => {
+    const handleTermChange = (index: number, value: string) => {
         const updated = [...termsAndConditions];
         updated[index] = value;
         setTermsAndConditions(updated);
@@ -410,13 +449,22 @@ const Page = () => {
                                 type="file"
                                 accept="image/*"
                                 className="form-control"
+                                // onChange={(e) => {
+                                //     const file = e.target.files[0];
+                                //     if (file) {
+                                //         const imageUrl = URL.createObjectURL(file);
+                                //         setFormData({ ...formData, uploadedImage: imageUrl, uploadedImageFile: file });
+                                //     }
+                                // }}
                                 onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
+                                    const files = e.target.files;
+                                    if (files && files[0]) {
+                                        const file = files[0];
                                         const imageUrl = URL.createObjectURL(file);
                                         setFormData({ ...formData, uploadedImage: imageUrl, uploadedImageFile: file });
                                     }
                                 }}
+
                             />
                         </div>
 
@@ -453,7 +501,7 @@ const Page = () => {
                                     <tbody>
                                         <tbody>
                                             {solutionBOQs?.flatMap((doc, i) =>
-                                                doc.items?.map((item, index) => (
+                                                doc.items?.map((item: { [x: string]: string | number | readonly string[] | undefined; Item: string | number | readonly string[] | undefined; Qty: any; }, index: any) => (
                                                     <tr key={`${i}-${index}`}>
                                                         <td><input value={item.Item} onChange={e => handleSolutionChange(i, index, 'Item', e.target.value)} /></td>
                                                         <td><input value={item.Qty ?? ''} onChange={e => handleSolutionChange(i, index, 'Qty', e.target.value)} /></td>
@@ -551,7 +599,7 @@ const Page = () => {
 
                                     <h4>Project Scope</h4>
                                     <ul>
-                                        {(Array.isArray(parsedData.ProjectScope) ? parsedData.ProjectScope : [parsedData.ProjectScope])?.map((point, index) => (
+                                        {(Array.isArray(parsedData.ProjectScope) ? parsedData.ProjectScope : [parsedData.ProjectScope])?.map((point: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined, index: React.Key | null | undefined) => (
                                             <li key={index}>{point}</li>
                                         ))}
                                     </ul>
@@ -577,8 +625,8 @@ const Page = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {parsedData.solutionBOQs?.flatMap((doc, i) =>
-                                                doc.items?.map((item, index) => (
+                                            {parsedData.solutionBOQs?.flatMap((doc: { items: any[]; }, i: any) =>
+                                                doc.items?.map((item: { [x: string]: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; Item: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; Qty: any; }, index: any) => (
                                                     <tr key={`${i}-${index}`}>
                                                         <td>{item.Item}</td>
                                                         <td>{item.Qty ?? 'N/A'}</td>
@@ -603,7 +651,7 @@ const Page = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {parsedData.optionalItems?.map((item, index) => (
+                                            {parsedData.optionalItems?.map((item: { [x: string]: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; Item: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; Qty: string | number | bigint | boolean | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<string | number | bigint | boolean | React.ReactPortal | React.ReactElement<unknown, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | null | undefined> | null | undefined; source: any; }, index: React.Key | null | undefined) => (
                                                 <tr key={index}>
                                                     <td>{item.Item}</td>
                                                     <td>{item.Qty}</td>
